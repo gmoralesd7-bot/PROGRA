@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificación de la Obra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="index.html" class="back-button">
+                        <i class="bi bi-arrow-left"></i> Volver al Inicio
+                    </a>
+                    <h2 class="mt-2 mb-0">
+                        <i class="bi bi-calendar-check"></i> Planificación de la Obra
+                    </h2>
+                </div>
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalActividad">
+                    <i class="bi bi-plus-circle"></i> Nueva Actividad
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 id="totalActividades">0</h3>
+                        <p class="mb-0">Total Actividades</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 id="completadas">0</h3>
+                        <p class="mb-0">Completadas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3 id="enProgreso">0</h3>
+                        <p class="mb-0">En Progreso</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3 id="atrasadas">0</h3>
+                        <p class="mb-0">Atrasadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchInput" 
+                               placeholder="Buscar..." onkeyup="filterActividades()">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="estadoFilter" onchange="filterActividades()">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en_progreso">En Progreso</option>
+                            <option value="completada">Completada</option>
+                            <option value="atrasada">Atrasada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="tipoFilter" onchange="filterActividades()">
+                            <option value="">Todos los tipos</option>
+                            <option value="construccion">Construcción</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="supervision">Supervisión</option>
+                            <option value="administrativa">Administrativa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="prioridadFilter" onchange="filterActividades()">
+                            <option value="">Todas las prioridades</option>
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Actividades -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Lista de Actividades</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="actividadesTable">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Avance</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Responsable</th>
+                                <th>Documentos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="actividadesBody">
+                            <!-- Los datos se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyActividades" class="empty-state" style="display: none;">
+                    <i class="bi bi-inbox"></i>
+                    <p>No hay actividades programadas. Agrega la primera.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Agregar/Editar Actividad -->
+    <div class="modal fade" id="modalActividad" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalActividadTitle">Nueva Actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formActividad" onsubmit="saveActividad(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="actividadId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Código *</label>
+                                <input type="text" class="form-control" id="codigo" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Título *</label>
+                                <input type="text" class="form-control" id="titulo" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Tipo *</label>
+                                <select class="form-select" id="tipo" required>
+                                    <option value="construccion">Construcción</option>
+                                    <option value="mantenimiento">Mantenimiento</option>
+                                    <option value="supervision">Supervisión</option>
+                                    <option value="administrativa">Administrativa</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Prioridad *</label>
+                                <select class="form-select" id="prioridad" required>
+                                    <option value="baja">Baja</option>
+                                    <option value="media" selected>Media</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="urgente">Urgente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Estado *</label>
+                                <select class="form-select" id="estado" required>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="en_progreso">En Progreso</option>
+                                    <option value="completada">Completada</option>
+                                    <option value="atrasada">Atrasada</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha Inicio Planificada *</label>
+                                <input type="date" class="form-control" id="fecha_inicio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha Fin Planificada *</label>
+                                <input type="date" class="form-control" id="fecha_fin" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Responsable</label>
+                                <input type="text" class="form-control" id="responsable">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Porcentaje de Avance (%)</label>
+                                <input type="number" class="form-control" id="porcentaje_avance" 
+                                       min="0" max="100" value="0">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                            </div>
+                            
+                            <!-- Sección de Documentos -->
+                            <div class="col-md-12">
+                                <hr>
+                                <h6 class="mb-3"><i class="bi bi-folder"></i> Documentos y Archivos</h6>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Planos</label>
+                                        <input type="file" class="form-control" id="planos" accept=".pdf,.dwg,.dxf,image/*" multiple onchange="previewArchivos('planos', 'planosPreview', 'planos')">
+                                        <div id="planosPreview" class="mt-2"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Presupuestos</label>
+                                        <input type="file" class="form-control" id="presupuestos" accept=".pdf,.xlsx,.xls,.doc,.docx" multiple onchange="previewArchivos('presupuestos', 'presupuestosPreview', 'presupuestos')">
+                                        <div id="presupuestosPreview" class="mt-2"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contratos</label>
+                                        <input type="file" class="form-control" id="contratos" accept=".pdf,.doc,.docx" multiple onchange="previewArchivos('contratos', 'contratosPreview', 'contratos')">
+                                        <div id="contratosPreview" class="mt-2"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fotografías del Avance</label>
+                                        <input type="file" class="form-control" id="fotografias" accept="image/*" multiple onchange="previewArchivos('fotografias', 'fotografiasPreview', 'fotografias')">
+                                        <div id="fotografiasPreview" class="mt-2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script src="planificacion.js"></script>
+</body>
+</html>
+
+
